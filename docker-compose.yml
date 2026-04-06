@@ -1,0 +1,39 @@
+services:
+
+  mongodb:
+    container_name: mongo
+    image: mongo
+    restart: always
+    ports:
+    - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-1234}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-jokesdb}
+    volumes:
+      - db_data:/data/db
+      - db_config_data:/data/configdb
+      - ./init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    restart: on-failure:3
+    profiles:
+      - express
+    depends_on:
+      - mongodb
+    links:
+      - "mongodb:mongo"
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME:-root}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-1234}
+      - ME_CONFIG_MONGODB_URL=mongodb://root:1234@mongo:27018/
+#      - ME_CONFIG_MONGODB_URL=${MONGO_PROTOCOL:-mongodb}://${MONGO_INITDB_ROOT_USERNAME:-root}:${MONGO_INITDB_ROOT_PASSWORD:-1234}@mongo:${MONGO_PORT:-27018}/
+
+
+volumes:
+  db_data:
+  db_config_data:
